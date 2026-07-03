@@ -1,6 +1,7 @@
 <div align="center">
 
-# 🏛️ Protocol
+# <img width="512" height="512" alt="image" src="https://github.com/user-attachments/assets/36512b69-8cf4-4f4c-bc1a-5b45bc4888d2" />
+ Protocol
 
 **Быстрый справочник по законам для государственных структур Majestic RP**
 
