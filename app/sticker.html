@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; font-family:"Segoe UI",system-ui,sans-serif; background:transparent; }
+  /* Прозрачность применяется только к фону-карточке, не к тексту */
+  #card {
+    height:100%; display:flex; flex-direction:column;
+    border:1px solid rgba(167,139,250,0.55);
+    border-radius:10px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.4);
+    position:relative;
+  }
+  /* Отдельный слой фона с регулируемой прозрачностью */
+  #bg {
+    position:absolute; inset:0; border-radius:10px;
+    background:#14161d; opacity:0.90; z-index:0;
+  }
+  #bar {
+    height:26px; flex-shrink:0; display:flex; align-items:center; gap:4px;
+    padding:0 4px 0 8px; -webkit-app-region:drag;
+    border-bottom:1px solid rgba(255,255,255,0.08); position:relative; z-index:1;
+  }
+  #title {
+    -webkit-app-region:no-drag; flex:1; background:transparent; border:none; outline:none;
+    color:#c4b5fd; font-size:11px; font-weight:700; letter-spacing:0.3px;
+    font-family:"Segoe UI",system-ui,sans-serif;
+  }
+  #title::placeholder { color:#6b6f7d; }
+  .btn {
+    -webkit-app-region:no-drag; width:20px; height:20px; border:none; border-radius:5px;
+    cursor:pointer; font-size:11px; line-height:1; background:rgba(255,255,255,0.08);
+    color:#c9cad4; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .btn:hover { background:rgba(255,255,255,0.18); }
+  #close { background:rgba(239,68,68,0.18); color:#f87171; }
+  #close:hover { background:rgba(239,68,68,0.4); }
+  #body {
+    flex:1; overflow:auto; padding:8px 11px 10px; font-size:12.5px; line-height:1.5;
+    -webkit-app-region:no-drag; position:relative; z-index:1;
+    background:transparent; border:none; outline:none; resize:none; width:100%;
+    color:#e8e9f0; font-family:"Segoe UI",system-ui,sans-serif; word-break:break-word;
+  }
+  #body::placeholder { color:#6b6f7d; }
+  /* Панель настроек прозрачности/цвета */
+  #panel {
+    position:relative; z-index:1; display:none; flex-direction:column; gap:6px;
+    padding:7px 10px; border-top:1px solid rgba(255,255,255,0.08);
+  }
+  #panel.show { display:flex; }
+  .row { display:flex; align-items:center; gap:8px; -webkit-app-region:no-drag; }
+  .row label { font-size:10px; color:#9ca3b0; min-width:64px; }
+  #opacity { flex:1; }
+  .colorbtn { border:1px solid rgba(255,255,255,0.2); border-radius:5px; cursor:pointer;
+    font-size:10px; padding:2px 8px; background:rgba(255,255,255,0.06); color:#c9cad4; }
+  .colorbtn.active { border-color:#a78bfa; color:#c4b5fd; }
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#333844; border-radius:3px; }
+  input[type=range] { -webkit-appearance:none; height:4px; background:rgba(255,255,255,0.2);
+    border-radius:2px; outline:none; -webkit-app-region:no-drag; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px;
+    border-radius:50%; background:#a78bfa; cursor:pointer; }
+</style>
+</head>
+<body>
+  <div id="card">
+    <div id="bg"></div>
+    <div id="bar">
+      <input id="title" placeholder="Заметка" />
+      <button class="btn" id="fav" title="В избранное">☆</button>
+      <button class="btn" id="settings" title="Прозрачность и цвет">⚙</button>
+      <button class="btn" id="close" title="Закрыть">✕</button>
+    </div>
+    <textarea id="body" placeholder="Введите текст заметки..."></textarea>
+    <div id="panel">
+      <div class="row">
+        <label>Прозрачность</label>
+        <input type="range" id="opacity" min="15" max="100" value="90" />
+      </div>
+      <div class="row">
+        <label>Цвет текста</label>
+        <button class="colorbtn active" id="cWhite">⚪ Белый</button>
+        <button class="colorbtn" id="cBlack">⚫ Чёрный</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    var bg = document.getElementById('bg');
+    var body = document.getElementById('body');
+    var title = document.getElementById('title');
+    var panel = document.getElementById('panel');
+
+    var opacityEl = document.getElementById('opacity');
+    var white = document.getElementById('cWhite');
+    var black = document.getElementById('cBlack');
+    var isDark = false;
+
+    function applyDark(d){
+      isDark = d;
+      if (d) { body.style.color='#0d0e14'; title.style.color='#1a1c25';
+        black.classList.add('active'); white.classList.remove('active'); }
+      else { body.style.color='#e8e9f0'; title.style.color='#c4b5fd';
+        white.classList.add('active'); black.classList.remove('active'); }
+    }
+    function pushUpdate(){
+      if (window.stickerAPI) window.stickerAPI.update({
+        text: body.value, title: title.value,
+        opacity: parseInt(opacityEl.value), dark: isDark });
+    }
+
+    // Приём начального состояния (текст, заголовок, прозрачность, цвет)
+    if (window.stickerAPI) {
+      window.stickerAPI.onInit(function(d){
+        body.value = d.text || '';
+        title.value = d.title || '';
+        if (typeof d.opacity === 'number') { opacityEl.value = d.opacity; bg.style.opacity = (d.opacity/100).toString(); }
+        if (typeof d.dark === 'boolean') applyDark(d.dark);
+      });
+      document.getElementById('close').onclick = function(){ window.stickerAPI.close(); };
+    }
+
+    // Сохраняем изменения текста и заголовка
+    body.addEventListener('input', pushUpdate);
+    title.addEventListener('input', pushUpdate);
+
+    // Кнопка «в избранное» — отправляем заголовок и текст заметки в приложение
+    var favBtn = document.getElementById('fav');
+    favBtn.onclick = function(){
+      if (window.stickerAPI && (body.value.trim() || title.value.trim())) {
+        window.stickerAPI.favorite({ title: title.value, text: body.value });
+        favBtn.textContent = '★';
+        favBtn.style.color = '#fbbf24';
+        setTimeout(function(){ favBtn.textContent='☆'; favBtn.style.color=''; }, 1500);
+      }
+    };
+
+    // Настройки прозрачности/цвета
+    document.getElementById('settings').onclick = function(){ panel.classList.toggle('show'); };
+    opacityEl.oninput = function(e){
+      bg.style.opacity = (e.target.value/100).toString();
+      pushUpdate();
+    };
+    white.onclick = function(){ applyDark(false); pushUpdate(); };
+    black.onclick = function(){ applyDark(true); pushUpdate(); };
+  </script>
+</body>
+</html>

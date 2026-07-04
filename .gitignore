@@ -1,0 +1,15 @@
+# Зависимости и сборка (генерируются, в репозиторий не нужны)
+node_modules/
+dist/
+build/
+*.exe
+
+# ОС
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Логи и временное
+*.log
+npm-debug.log*
+.cache/
