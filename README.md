@@ -13,7 +13,6 @@
 [![Скачать](https://img.shields.io/badge/⬇_Скачать-Protocol.exe-a78bfa?style=for-the-badge)](../../releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20|%2011-2d2d38?style=for-the-badge&logo=windows&logoColor=white)](../../releases/latest)
 [![Сервер](https://img.shields.io/badge/Сервер-Orlando-34d399?style=for-the-badge)](#-о-серверах-и-правилах)
-[![Версия](https://img.shields.io/badge/Версия-1.27.1-f472b6?style=for-the-badge)](../../releases/latest)
 
 <br/>
 
