@@ -12,6 +12,13 @@
     border-radius:10px;
     box-shadow:0 4px 20px rgba(0,0,0,0.4);
     position:relative;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  /* «Фокус игры»: мышь проходит сквозь заметку — показываем это синей рамкой,
+     тем же цветом, что и сам режим в главном окне. */
+  #card.nofocus {
+    border-color:rgba(59,130,246,0.9);
+    box-shadow:0 4px 20px rgba(0,0,0,0.4), 0 0 12px rgba(59,130,246,0.35);
   }
   /* Отдельный слой фона с регулируемой прозрачностью */
   #bg {
@@ -120,6 +127,12 @@
         if (typeof d.dark === 'boolean') applyDark(d.dark);
       });
       document.getElementById('close').onclick = function(){ window.stickerAPI.close(); };
+      // Фокус игры включён/выключен — перекрашиваем рамку
+      if (window.stickerAPI.onNoFocus) {
+        window.stickerAPI.onNoFocus(function(on){
+          document.getElementById('card').classList.toggle('nofocus', !!on);
+        });
+      }
     }
 
     // Сохраняем изменения текста и заголовка

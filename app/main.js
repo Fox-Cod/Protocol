@@ -1,6 +1,64 @@
-const { app, BrowserWindow, Menu, ipcMain, globalShortcut } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, globalShortcut, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+
+// Репозиторий для проверки обновлений
+const REPO = 'Fox-Cod/Protocol';
+
+// Сравнение версий: 1 если a<b (b новее), -1 если a>b, 0 равны
+function compareVersions(a, b) {
+  const pa = String(a).replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+  const pb = String(b).replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x < y) return 1;
+    if (x > y) return -1;
+  }
+  return 0;
+}
+
+// Спросить у GitHub последнюю версию релиза.
+// manualEvent — если задан, это ручная проверка: всегда отвечаем результатом
+// (есть новее / уже последняя / ошибка), а не только шлём баннер.
+function checkForUpdate(manualEvent) {
+  const options = {
+    hostname: 'api.github.com',
+    path: `/repos/${REPO}/releases/latest`,
+    method: 'GET',
+    headers: { 'User-Agent': 'Protocol-App', 'Accept': 'application/vnd.github+json' },
+    timeout: 8000,
+  };
+  const reply = (payload) => {
+    if (manualEvent && manualEvent.sender && !manualEvent.sender.isDestroyed()) {
+      manualEvent.sender.send('update-check-result', payload);
+    }
+  };
+  const req = https.request(options, (res) => {
+    let data = '';
+    res.on('data', (c) => data += c);
+    res.on('end', () => {
+      try {
+        if (res.statusCode !== 200) { reply({ status: 'error' }); return; }
+        const json = JSON.parse(data);
+        const latest = (json.tag_name || json.name || '').replace(/^v/, '');
+        if (!latest) { reply({ status: 'error' }); return; }
+        const url = json.html_url || `https://github.com/${REPO}/releases/latest`;
+        if (compareVersions(app.getVersion(), latest) === 1) {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('update-available', { version: latest, url });
+          }
+          reply({ status: 'update', version: latest, url });
+        } else {
+          reply({ status: 'latest', version: app.getVersion() });
+        }
+      } catch (e) { reply({ status: 'error' }); }
+    });
+  });
+  req.on('error', () => reply({ status: 'error' }));   // нет интернета
+  req.on('timeout', () => { req.destroy(); reply({ status: 'error' }); });
+  req.end();
+}
 
 let mainWindow;
 const stickers = new Set();
@@ -73,7 +131,11 @@ function createWindow() {
         noFocusMode = true;
         mainWindow.setFocusable(false);
         mainWindow.setAlwaysOnTop(true, 'screen-saver');
-        for (const s of stickers) { if (!s.isDestroyed()) s.setFocusable(false); }
+        for (const s of stickers) {
+          if (s.isDestroyed()) continue;
+          s.setFocusable(false);
+          setStickerClickThrough(s, true);
+        }
         mainWindow.webContents.send('nofocus-restored', true);
         mainWindow._restoreNoFocus = false;
       }, 300);
@@ -101,8 +163,14 @@ ipcMain.on('win-nofocus', (e, on) => {
     // Обычный режим — НЕ поверх других окон (если пользователь сам не включил ⇧)
     if (!userAlwaysTop) mainWindow.setAlwaysOnTop(false);
   }
-  // стикеры тоже
-  for (const s of stickers) { if (!s.isDestroyed()) s.setFocusable(!on); }
+  // Заметки тоже. Мало сделать их нефокусируемыми: курсор всё равно цепляется
+  // за окно, и игра теряет управление камерой. Поэтому в игровом режиме
+  // пропускаем мышь насквозь — заметку видно, но она для мыши прозрачна.
+  for (const s of stickers) {
+    if (s.isDestroyed()) continue;
+    s.setFocusable(!on);
+    setStickerClickThrough(s, on);
+  }
 });
 
 // Кнопки главного окна
@@ -118,10 +186,29 @@ ipcMain.on('win-minimize', () => {
   mainWindow.minimize();
 });
 ipcMain.on('win-close', () => mainWindow && mainWindow.close());
+
+// Открыть страницу релиза в браузере (кнопка «Обновить» в баннере)
+ipcMain.on('open-release-page', (e, url) => {  try { shell.openExternal(url || `https://github.com/${REPO}/releases/latest`); } catch (err) {}
+});
+ipcMain.on('check-update', (e) => checkForUpdate(e));
+
 ipcMain.on('win-top', (e, val) => {
   userAlwaysTop = !!val;
   if (mainWindow) mainWindow.setAlwaysOnTop(!!val);
 });
+
+// Пропускать ли мышь сквозь окно-заметку.
+// forward:true нужен, чтобы окно всё же получало движения курсора — иначе
+// на части систем окно перестаёт перерисовываться.
+function setStickerClickThrough(win, on) {
+  try { win.setIgnoreMouseEvents(!!on, { forward: true }); } catch (err) {}
+  // Сообщаем окну — оно подсветит рамку синим, чтобы было видно,
+  // что заметка сейчас сквозная для мыши.
+  try {
+    if (win.webContents && !win.webContents.isDestroyed())
+      win.webContents.send('sticker-nofocus', !!on);
+  } catch (err) {}
+}
 
 // Создать отдельное окно-стикер поверх всего
 function spawnSticker(opts = {}) {
@@ -151,13 +238,15 @@ function spawnSticker(opts = {}) {
   s._stickerOpacity = opts.opacity;
   s._stickerDark = opts.dark;
   s.setAlwaysOnTop(true, 'screen-saver');
-  if (noFocusMode) s.setFocusable(false);
+  // Заметка, созданная уже в игровом режиме, сразу должна быть сквозной
+  if (noFocusMode) { s.setFocusable(false); setStickerClickThrough(s, true); }
   s.loadFile('sticker.html');
   s.webContents.once('did-finish-load', () => {
     s.webContents.send('sticker-init', {
       text: s._stickerText, title: s._stickerTitle,
       opacity: s._stickerOpacity, dark: s._stickerDark,
     });
+    if (noFocusMode) s.webContents.send('sticker-nofocus', true);
   });
   const save = () => { s._saveT && clearTimeout(s._saveT); s._saveT = setTimeout(persistStickers, 400); };
   s.on('move', save);
@@ -200,6 +289,9 @@ ipcMain.on('sticker-close', (e) => {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // Проверить обновления через несколько секунд после запуска
+  setTimeout(checkForUpdate, 4000);
 
   // Восстановить сохранённые стикеры на их местах
   const saved = loadStickerData();
@@ -268,6 +360,11 @@ app.whenReady().then(() => {
     mainWindow.setAlwaysOnTop(false);
     mainWindow.focus();
     noFocusMode = false;
+    for (const s of stickers) {
+      if (s.isDestroyed()) continue;
+      s.setFocusable(true);
+      setStickerClickThrough(s, false);
+    }
     mainWindow.webContents.send('nofocus-restored', false);
   };
   try { globalShortcut.register('CommandOrControl+Shift+P', rescue) || globalShortcut.register('Alt+P', rescue); } catch (e) {}

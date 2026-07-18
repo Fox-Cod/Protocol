@@ -9,6 +9,11 @@ contextBridge.exposeInMainWorld('winAPI', {
   createSticker: (text) => ipcRenderer.send('create-sticker', text),
   onAddFavoriteNote: (cb) => ipcRenderer.on('add-favorite-note', (e, data) => cb(data || {})),
   onNoFocusRestored: (cb) => ipcRenderer.on('nofocus-restored', (e, v) => cb(!!v)),
+  onUpdateAvailable: (cb) => ipcRenderer.on('update-available', (e, info) => cb(info || {})),
+  openReleasePage: (url) => ipcRenderer.send('open-release-page', url),
+  // Ручная проверка обновлений: шлём запрос и слушаем результат
+  checkUpdate: () => ipcRenderer.send('check-update'),
+  onUpdateCheckResult: (cb) => ipcRenderer.on('update-check-result', (e, res) => cb(res || {})),
   // Глобальные горячие клавиши (из main): передаём колбэку имя действия
   onHotkey: (cb) => {
     ipcRenderer.on('hk-proc', () => cb('proc'));
@@ -22,6 +27,8 @@ contextBridge.exposeInMainWorld('winAPI', {
 // API окна-стикера
 contextBridge.exposeInMainWorld('stickerAPI', {
   onInit: (cb) => ipcRenderer.on('sticker-init', (e, data) => cb(data || {})),
+  // Режим «Фокус игры»: заметка стала сквозной для мыши — красим рамку
+  onNoFocus: (cb) => ipcRenderer.on('sticker-nofocus', (e, v) => cb(!!v)),
   onText: (cb) => ipcRenderer.on('sticker-init', (e, data) => cb((data && data.text) || '')),
   update: (patch) => ipcRenderer.send('sticker-update', patch),
   favorite: (payload) => ipcRenderer.send('sticker-favorite', payload),
