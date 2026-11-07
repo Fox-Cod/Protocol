@@ -1,0 +1,36 @@
+# Окружение службы распознавания (Bodycam). Ставится в C:\Hub\voice-env —
+# оно НЕ в сборке и не в git (у venv свой .gitignore со «*»).
+#
+#   py -3.14 -m venv C:\Hub\voice-env
+#   C:\Hub\voice-env\Scripts\python.exe -m pip install -r C:\Hub\app\voice\requirements.txt
+#
+# Модель речи (faster-whisper large-v3, ~3 ГБ) скачивается сама при первом
+# запуске в кэш huggingface. Модель голосов — вручную, см. app/CLAUDE.md,
+# раздел «Кто говорит: голоса и роли».
+#
+# Версии — те, на которых всё проверено 29.10.2026 (Python 3.14.7, RTX 5070).
+
+faster-whisper==1.2.1
+ctranslate2==4.8.2
+av==18.1.0
+numpy==2.5.3
+huggingface_hub==1.31.0
+
+# видеокарта: библиотеки CUDA колёсами (служба подгружает их сама)
+nvidia-cublas-cu12==12.9.2.10
+nvidia-cuda-nvrtc-cu12==12.9.86
+nvidia-cudnn-cu12==9.26.0.51
+
+# звук: петля системного звука и микрофон
+SoundCard==0.4.6
+sounddevice==0.5.6
+
+# различение голосов (отпечаток голоса ERes2Net, на процессоре)
+sherpa-onnx==2.0.1
+sherpa-onnx-core==2.0.1
+onnxruntime==1.30.0
+
+# GigaAM-v3 (03.11.2026): распознавание русской речи на процессоре через тот
+# же onnxruntime. Пакет на чистом Python, ставить без зависимостей — numpy и
+# onnxruntime уже есть: pip install --no-deps onnx-asr==0.12.0
+onnx-asr==0.12.0

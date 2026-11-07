@@ -1,35 +1,65 @@
 {
-  "name": "protokol",
-  "version": "1.48.0",
-  "description": "Протокол — справочник по законам Majestic RP",
-  "main": "main.js",
-  "author": "Stan Laker",
-  "scripts": {
-    "start": "electron .",
-    "dist": "electron-builder --win --x64"
-  },
-  "build": {
-    "appId": "com.stanlaker.protokol",
-    "productName": "Protocol",
-    "icon": "icon.ico",
-    "files": [
-      "main.js",
-      "preload.js",
-      "GovHelper.html",
-      "sticker.html",
-      "icon.png",
-      "icon.ico"
-    ],
-    "win": {
-      "target": "portable",
-      "icon": "icon.ico"
-    },
-    "portable": {
-      "artifactName": "Protocol.exe"
-    }
-  },
-  "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
-  }
+	"name": "protokol",
+	"version": "4.3.2",
+	"description": "Протокол — справочник по законам Majestic RP",
+	"main": "main.js",
+	"author": "Lee Meller",
+	"scripts": {
+		"start": "electron .",
+		"dist": "electron-builder --win --x64",
+		"predist": "node tools/pack-data.js",
+		"pack-data": "node tools/pack-data.js",
+		"test": "node test/search_bench.js",
+		"test:ai": "node test/ai_pipeline_test.js",
+		"test:update": "node test/update_apply_test.js",
+		"eval:ai": "node test/ai_eval.js",
+		"test:voice": "node test/voice_brain_test.js",
+		"test:overlay": "electron test/overlay_render.js",
+		"test:focus": "electron test/focus_test.js",
+		"test:focusback": "electron test/focus_back_test.js",
+		"test:install": "node test/bodycam_install_test.js",
+		"bodycam-manifest": "node tools/bodycam-manifest.js",
+		"test:service": "..\\voice-env\\Scripts\\python.exe test\\voice_service_test.py"
+	},
+	"build": {
+		"appId": "com.leemeller.protocol",
+		"productName": "Protocol",
+		"icon": "icon.ico",
+		"files": [
+			"**/*.js",
+			"**/*.html",
+			"**/*.css",
+			"icon.png",
+			"icon.ico",
+			"data/**/*.br",
+			"bodycam-manifest.json",
+			"!dist/**",
+			"!**/*.md",
+			"!GovHelper.html",
+			"!test/**",
+			"!tools/**",
+			"!voice/**"
+		],
+		"extraResources": [
+			{
+				"from": "voice",
+				"to": "voice",
+				"filter": [
+					"protocol_voice.py",
+					"proc_loopback.py"
+				]
+			}
+		],
+		"win": {
+			"target": "portable",
+			"icon": "icon.ico"
+		},
+		"portable": {
+			"artifactName": "Protocol.exe"
+		}
+	},
+	"devDependencies": {
+		"electron": "^44.10.0",
+		"electron-builder": "^26.18.0"
+	}
 }

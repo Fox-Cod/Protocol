@@ -1,0 +1,11 @@
+# Прокси ИИ для Protocol. Деплой: npx wrangler deploy
+# Секреты сюда НЕ пишутся — только командами:
+#   npx wrangler secret put OPENAI_API_KEY
+#   npx wrangler secret put APP_SECRET
+name = "protocol-ai"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+ALLOWED_MODELS = "gpt-4o-mini"
+MAX_CHARS = "60000"

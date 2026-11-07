@@ -1,0 +1,11 @@
+# Раздача базы законов для Protocol. Деплой: npx wrangler deploy
+# Пароль (если нужен) — только командой:
+#   npx wrangler secret put APP_SECRET
+name = "protocol-data"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+# ваш репозиторий с папкой data/ (форк Fox-Cod/Protocol-Data)
+DATA_REPO = "your-name/Protocol-Data"
+DATA_BRANCH = "main"

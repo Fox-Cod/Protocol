@@ -1,0 +1,487 @@
+{
+ "version": 2,
+ "made": "2026-11-03",
+ "python": {
+  "version": "3.14.7",
+  "file": "python-3.14.7-embed-amd64.zip",
+  "url": "https://www.python.org/ftp/python/3.14.7/python-3.14.7-embed-amd64.zip",
+  "size": 12673227,
+  "sha256": "d297e5ff019966817ad8502465176139f2d3d840fa4ed84b13bed399a6ab1f15"
+ },
+ "pip": {
+  "name": "pip",
+  "version": "26.2.1",
+  "file": "pip-26.2.1-py3-none-any.whl",
+  "url": "https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl",
+  "size": 1816632,
+  "sha256": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e"
+ },
+ "wheels": {
+  "base": [
+   {
+    "name": "anyio",
+    "version": "4.15.1",
+    "file": "anyio-4.15.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+    "size": 132079,
+    "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
+   },
+   {
+    "name": "av",
+    "version": "18.1.0",
+    "file": "av-18.1.0-cp311-abi3-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/33/b4/76ba21e46704f632004276b85289a1582e95f5eff760436d6149875a1881/av-18.1.0-cp311-abi3-win_amd64.whl",
+    "size": 27595679,
+    "sha256": "ea1480b7a8d5405cb5f382b344731bf125fd2c1c6fae3964f6c48595628387ff"
+   },
+   {
+    "name": "certifi",
+    "version": "2026.7.22",
+    "file": "certifi-2026.7.22-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+    "size": 136983,
+    "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+   },
+   {
+    "name": "cffi",
+    "version": "2.1.1",
+    "file": "cffi-2.1.1-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/a7/06/1c3e01e3ba14c39f6d10bfbac52753b7e22259e38088e5cfe1d704918690/cffi-2.1.1-cp314-cp314-win_amd64.whl",
+    "size": 187949,
+    "sha256": "3222ba5d678f80a030e6afbcc33dc1ae5cb45facabb61cee2c7016b8432fde48"
+   },
+   {
+    "name": "click",
+    "version": "8.5.0",
+    "file": "click-8.5.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+    "size": 125251,
+    "sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360"
+   },
+   {
+    "name": "colorama",
+    "version": "0.4.6",
+    "file": "colorama-0.4.6-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+    "size": 25335,
+    "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
+   },
+   {
+    "name": "ctranslate2",
+    "version": "4.8.2",
+    "file": "ctranslate2-4.8.2-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/f2/86/03386a60b634a34c820e00f82bec808d38841cc2c007ec6b797892a9a5b5/ctranslate2-4.8.2-cp314-cp314-win_amd64.whl",
+    "size": 19478465,
+    "sha256": "00bc9f44172d05bd2becefe757d2397ab3292fad1695169f9ebb9c16eb497ce2"
+   },
+   {
+    "name": "faster-whisper",
+    "version": "1.2.1",
+    "file": "faster_whisper-1.2.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/05/99/49ee85903dee060d9f08297b4a342e5e0bcfca2f027a07b4ee0a38ab13f9/faster_whisper-1.2.1-py3-none-any.whl",
+    "size": 1118909,
+    "sha256": "79a66ad50688c0b794dd501dc340a736992a6342f7f95e5811be60b5224a26a7"
+   },
+   {
+    "name": "filelock",
+    "version": "3.32.6",
+    "file": "filelock-3.32.6-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/cc/06/4f138f618dbea66803291274f228f01daf29f306fe8b96bc30dab765df75/filelock-3.32.6-py3-none-any.whl",
+    "size": 100189,
+    "sha256": "3f16ecd0117feae0dfc147e8c62eb5daeccd8bd800378c3ddf416de9b4feb6b1"
+   },
+   {
+    "name": "flatbuffers",
+    "version": "25.12.19",
+    "file": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl",
+    "size": 26661,
+    "sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4"
+   },
+   {
+    "name": "fsspec",
+    "version": "2026.7.0",
+    "file": "fsspec-2026.7.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/fd/3c/6a2bf344106328fd04963664a60b9bb6496fc25df8e962fcdc1367285fb9/fsspec-2026.7.0-py3-none-any.whl",
+    "size": 206583,
+    "sha256": "b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279"
+   },
+   {
+    "name": "h11",
+    "version": "0.16.0",
+    "file": "h11-0.16.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+    "size": 37515,
+    "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+   },
+   {
+    "name": "hf-xet",
+    "version": "1.6.0",
+    "file": "hf_xet-1.6.0-cp38-abi3-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/98/b7/8c59a66d15205024662f1d66968136f13893f96df1ddc5087e2e281fc95f/hf_xet-1.6.0-cp38-abi3-win_amd64.whl",
+    "size": 4033128,
+    "sha256": "fb4fadde1b2b70bf4c0c14a6dccbe7194b1c28947fefd5bbe3fed9d940676c3b"
+   },
+   {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "file": "httpcore-1.0.9-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+    "size": 78784,
+    "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
+   },
+   {
+    "name": "httpx",
+    "version": "0.28.1",
+    "file": "httpx-0.28.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+    "size": 73517,
+    "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"
+   },
+   {
+    "name": "huggingface_hub",
+    "version": "1.31.0",
+    "file": "huggingface_hub-1.31.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/c3/7f/3f886a625043b77312b80da2f2bf00b5ecbf5a73061af1aa0259cd258c9d/huggingface_hub-1.31.0-py3-none-any.whl",
+    "size": 798313,
+    "sha256": "9dbb6a503cbe2494ea666695207e7262d410659e09134059deb83e5480864667"
+   },
+   {
+    "name": "idna",
+    "version": "3.19",
+    "file": "idna-3.19-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/57/b0/0e52c878c53f245edd3a11020f20979b3f490f245af532c7cae3027754b5/idna-3.19-py3-none-any.whl",
+    "size": 68550,
+    "sha256": "815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4"
+   },
+   {
+    "name": "numpy",
+    "version": "2.5.3",
+    "file": "numpy-2.5.3-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/a4/73/d2c08231e4fde7e415501fd02c715d96e98599b2d8384445933944152984/numpy-2.5.3-cp314-cp314-win_amd64.whl",
+    "size": 12698179,
+    "sha256": "2c25dfa72943e4336ddb6b0ee4277b47a0c85bede0807530ec68103bf58e2c10"
+   },
+   {
+    "name": "onnx-asr",
+    "version": "0.12.0",
+    "file": "onnx_asr-0.12.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/6a/60/2fa469a2ee674c35ab48821a1039762ae7b9d0b88188ac1012e779477f76/onnx_asr-0.12.0-py3-none-any.whl",
+    "size": 3980006,
+    "sha256": "5e7ceca454609819ea7833f61e2302e0c8f6ece4f8a78b66c5daba53cb51de4a"
+   },
+   {
+    "name": "onnxruntime",
+    "version": "1.30.0",
+    "file": "onnxruntime-1.30.0-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/4d/0a/748b86000fbf9518b5dfc5bdc1b924eeaca976203740fd9d30649e568ee6/onnxruntime-1.30.0-cp314-cp314-win_amd64.whl",
+    "size": 14675319,
+    "sha256": "3bdd1752a8502ac1a7ccc6e878d16db6943df574d54ed7f01058a6806ae05be4"
+   },
+   {
+    "name": "packaging",
+    "version": "26.3",
+    "file": "packaging-26.3-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+    "size": 129956,
+    "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+   },
+   {
+    "name": "protobuf",
+    "version": "7.36.1",
+    "file": "protobuf-7.36.1-cp310-abi3-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/db/37/155788a0d8daded960375af604202805308169f9b859419ea0aa370946e2/protobuf-7.36.1-cp310-abi3-win_amd64.whl",
+    "size": 456518,
+    "sha256": "51139351435d9b43d88a55eaa49fb6f737fbb478fb0cbf2cf694d1a04a9d3363"
+   },
+   {
+    "name": "pycparser",
+    "version": "3.0",
+    "file": "pycparser-3.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl",
+    "size": 48172,
+    "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
+   },
+   {
+    "name": "PyYAML",
+    "version": "6.0.3",
+    "file": "pyyaml-6.0.3-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/23/20/bb6982b26a40bb43951265ba29d4c246ef0ff59c9fdcdf0ed04e0687de4d/pyyaml-6.0.3-cp314-cp314-win_amd64.whl",
+    "size": 156429,
+    "sha256": "4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac"
+   },
+   {
+    "name": "sherpa_onnx",
+    "version": "2.0.1",
+    "file": "sherpa_onnx-2.0.1-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/26/b0/0d0609ef69dfd690b9b470024eedf0b418262b0d0ef465b98504854e4316/sherpa_onnx-2.0.1-cp314-cp314-win_amd64.whl",
+    "size": 2241664,
+    "sha256": "4aa2668fa24aa3223bae9d1363aa3274ef2201f2f1560542b6d3c282130a3831"
+   },
+   {
+    "name": "sherpa-onnx-core",
+    "version": "2.0.1",
+    "file": "sherpa_onnx_core-2.0.1-py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/68/ea/8f02cc34c19d956697dda2f2c470c14cd6b7af77f3ae855c514a86039b68/sherpa_onnx_core-2.0.1-py3-none-win_amd64.whl",
+    "size": 16663244,
+    "sha256": "08890e9ea23ed2f59f81d5840c63b6b5cc8674d0f6e48d9069126a848aa0e022"
+   },
+   {
+    "name": "SoundCard",
+    "version": "0.4.6",
+    "file": "soundcard-0.4.6-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/4c/be/eb381e700a61b4ce899e14850d7ae78f9600fd2f8b58b4c52b8714e81917/soundcard-0.4.6-py3-none-any.whl",
+    "size": 43939,
+    "sha256": "ab44b8c1033ac6ec49c5d618ce096dab9b60c7d7a427c92bef15856e5ebb3e09"
+   },
+   {
+    "name": "sounddevice",
+    "version": "0.5.6",
+    "file": "sounddevice-0.5.6-py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/8d/3e/cbc593c31a5f0d817b3fe97e64aa8461bd0f55cb07b67ce1b776296ae336/sounddevice-0.5.6-py3-none-win_amd64.whl",
+    "size": 1009630,
+    "sha256": "7f4162f514f007b0bf25a3ccfed3f1705bc2ec311888a90232729eec4f57a4f4"
+   },
+   {
+    "name": "soundfile",
+    "version": "0.14.0",
+    "file": "soundfile-0.14.0-py2.py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/ed/97/b39c18ac1df45e755ca22b8b00e872929da5d107998a207a5e4ac831bfda/soundfile-0.14.0-py2.py3-none-win_amd64.whl",
+    "size": 1021480,
+    "sha256": "299491d3499460fb1b74bb4bd78b57ffc2d243a5fafa7b6ec1b264875c78453e"
+   },
+   {
+    "name": "tokenizers",
+    "version": "0.23.2",
+    "file": "tokenizers-0.23.2-cp310-abi3-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/db/f7/0a69ac6b82dbccf3f71add938a161c497952749294b8dd6dfe03a819dc40/tokenizers-0.23.2-cp310-abi3-win_amd64.whl",
+    "size": 2863236,
+    "sha256": "2e96f5699d5249c9c64aa8412e044f727aae3a4098cf830f9901ec1afc361cde"
+   },
+   {
+    "name": "tqdm",
+    "version": "4.70.1",
+    "file": "tqdm-4.70.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl",
+    "size": 80199,
+    "sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73"
+   },
+   {
+    "name": "typing_extensions",
+    "version": "4.16.0",
+    "file": "typing_extensions-4.16.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+    "size": 45571,
+    "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+   }
+  ],
+  "cuda": [
+   {
+    "name": "nvidia-cublas-cu12",
+    "version": "12.9.2.10",
+    "file": "nvidia_cublas_cu12-12.9.2.10-py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/20/e2/fc9a0e985249d873150276d5afb02e39a66817fedbf1a385724393e505ed/nvidia_cublas_cu12-12.9.2.10-py3-none-win_amd64.whl",
+    "size": 553162896,
+    "sha256": "623f43027d40d44ceadf0043f002bd25cf353e8f13ce90b9a87057019f560661"
+   },
+   {
+    "name": "nvidia-cuda-nvrtc-cu12",
+    "version": "12.9.86",
+    "file": "nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/52/de/823919be3b9d0ccbf1f784035423c5f18f4267fb0123558d58b813c6ec86/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-win_amd64.whl",
+    "size": 76408187,
+    "sha256": "72972ebdcf504d69462d3bcd67e7b81edd25d0fb85a2c46d3ea3517666636349"
+   },
+   {
+    "name": "nvidia-cudnn-cu12",
+    "version": "9.26.0.51",
+    "file": "nvidia_cudnn_cu12-9.26.0.51-py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/c5/ee/baebebf270df5a57830e40879b4016de47ca43961095cf18b7749452150f/nvidia_cudnn_cu12-9.26.0.51-py3-none-win_amd64.whl",
+    "size": 746465599,
+    "sha256": "010abb90f513fc6e2b6e9278d56f594b87922fff80737434ab415da609db8311"
+   }
+  ]
+ },
+ "speaker": {
+  "file": "3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx",
+  "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx",
+  "size": 39593765,
+  "sha256": "e2d2048292e055f7b61cdec3db010503f35369b245bf0b3bbad021c9a91e4053"
+ },
+ "models": {
+  "large-v3": {
+   "repo": "Systran/faster-whisper-large-v3",
+   "commit": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+   "files": [
+    {
+     "path": "config.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/config.json",
+     "size": 2394,
+     "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9"
+    },
+    {
+     "path": "model.bin",
+     "url": "https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/model.bin",
+     "size": 3087284237,
+     "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/preprocessor_config.json",
+     "size": 340,
+     "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
+    },
+    {
+     "path": "tokenizer.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/tokenizer.json",
+     "size": 2480617,
+     "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"
+    },
+    {
+     "path": "vocabulary.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/vocabulary.json",
+     "size": 1068114,
+     "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+    }
+   ]
+  },
+  "large-v3-turbo": {
+   "repo": "mobiuslabsgmbh/faster-whisper-large-v3-turbo",
+   "commit": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf",
+   "files": [
+    {
+     "path": "config.json",
+     "url": "https://huggingface.co/mobiuslabsgmbh/faster-whisper-large-v3-turbo/resolve/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf/config.json",
+     "size": 2263,
+     "sha256": "b0253ea6c0d3bea6b1e19e91a02acfd3b53f4467362efcb5a3e6b16c9b3a9b7e"
+    },
+    {
+     "path": "model.bin",
+     "url": "https://huggingface.co/mobiuslabsgmbh/faster-whisper-large-v3-turbo/resolve/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf/model.bin",
+     "size": 1617884929,
+     "sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "url": "https://huggingface.co/mobiuslabsgmbh/faster-whisper-large-v3-turbo/resolve/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf/preprocessor_config.json",
+     "size": 340,
+     "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
+    },
+    {
+     "path": "tokenizer.json",
+     "url": "https://huggingface.co/mobiuslabsgmbh/faster-whisper-large-v3-turbo/resolve/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf/tokenizer.json",
+     "size": 2710337,
+     "sha256": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd"
+    },
+    {
+     "path": "vocabulary.json",
+     "url": "https://huggingface.co/mobiuslabsgmbh/faster-whisper-large-v3-turbo/resolve/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf/vocabulary.json",
+     "size": 1068114,
+     "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+    }
+   ]
+  },
+  "medium": {
+   "repo": "Systran/faster-whisper-medium",
+   "commit": "08e178d48790749d25932bbc082711ddcfdfbc4f",
+   "files": [
+    {
+     "path": "config.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-medium/resolve/08e178d48790749d25932bbc082711ddcfdfbc4f/config.json",
+     "size": 2257,
+     "sha256": "3622a2ddc41ec0e0fd4e68c13c6830f03b90c38d89aaad184de02c8c642cf807"
+    },
+    {
+     "path": "model.bin",
+     "url": "https://huggingface.co/Systran/faster-whisper-medium/resolve/08e178d48790749d25932bbc082711ddcfdfbc4f/model.bin",
+     "size": 1527906378,
+     "sha256": "9b45e1009dcc4ab601eff815b61d80e60ce3fd8c74c1a14f4a282258286b51ae"
+    },
+    {
+     "path": "tokenizer.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-medium/resolve/08e178d48790749d25932bbc082711ddcfdfbc4f/tokenizer.json",
+     "size": 2203239,
+     "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+    },
+    {
+     "path": "vocabulary.txt",
+     "url": "https://huggingface.co/Systran/faster-whisper-medium/resolve/08e178d48790749d25932bbc082711ddcfdfbc4f/vocabulary.txt",
+     "size": 459861,
+     "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+    }
+   ]
+  },
+  "small": {
+   "repo": "Systran/faster-whisper-small",
+   "commit": "536b0662742c02347bc0e980a01041f333bce120",
+   "files": [
+    {
+     "path": "config.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/config.json",
+     "size": 2370,
+     "sha256": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828"
+    },
+    {
+     "path": "model.bin",
+     "url": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/model.bin",
+     "size": 483546902,
+     "sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671"
+    },
+    {
+     "path": "tokenizer.json",
+     "url": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/tokenizer.json",
+     "size": 2203239,
+     "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+    },
+    {
+     "path": "vocabulary.txt",
+     "url": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/vocabulary.txt",
+     "size": 459861,
+     "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+    }
+   ]
+  },
+  "gigaam-v3": {
+   "repo": "istupakov/gigaam-v3-onnx",
+   "commit": "322c3b29492673eb7d0b434bfa9dfb8653e34d02",
+   "files": [
+    {
+     "path": "config.json",
+     "url": "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/322c3b29492673eb7d0b434bfa9dfb8653e34d02/config.json",
+     "size": 135,
+     "sha256": "0641fcf73f4af791c73f05083e38a658ff5dcbee3534a0c61396c10f4b97f0fe"
+    },
+    {
+     "path": "v3_e2e_rnnt.yaml",
+     "url": "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/322c3b29492673eb7d0b434bfa9dfb8653e34d02/v3_e2e_rnnt.yaml",
+     "size": 1041,
+     "sha256": "d23270a1f327e365ebc4554b7ceee69ac12898e21092c18085151516aa58f91b"
+    },
+    {
+     "path": "v3_e2e_rnnt_vocab.txt",
+     "url": "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/322c3b29492673eb7d0b434bfa9dfb8653e34d02/v3_e2e_rnnt_vocab.txt",
+     "size": 13354,
+     "sha256": "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7"
+    },
+    {
+     "path": "v3_e2e_rnnt_decoder.int8.onnx",
+     "url": "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/322c3b29492673eb7d0b434bfa9dfb8653e34d02/v3_e2e_rnnt_decoder.int8.onnx",
+     "size": 1159170,
+     "sha256": "89014e134865615b91e037157e46e389b1271e6072460efc010ea08e61e23146"
+    },
+    {
+     "path": "v3_e2e_rnnt_joint.int8.onnx",
+     "url": "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/322c3b29492673eb7d0b434bfa9dfb8653e34d02/v3_e2e_rnnt_joint.int8.onnx",
+     "size": 687791,
+     "sha256": "ade116563dbf66e503b0994efab6b5861412743e52bf31c39fc3fffa3783d5d1"
+    },
+    {
+     "path": "v3_e2e_rnnt_encoder.int8.onnx",
+     "url": "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/322c3b29492673eb7d0b434bfa9dfb8653e34d02/v3_e2e_rnnt_encoder.int8.onnx",
+     "size": 224570477,
+     "sha256": "4e0e076a6076cd110277e529b8ac8f32cd5297f7fbebad5341ae8ddb7d00817b"
+    }
+   ]
+  }
+ }
+}

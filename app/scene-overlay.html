@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'" />
+<title>Bodycam</title>
+<!--
+  Окно Bodycam поверх игры.
+
+  Основное окно «Протокола» — справочник: в него заходят, когда есть время.
+  Посреди задержания времени нет, поэтому здесь не отчёт, а подсказка, которую
+  читают краем глаза за полсекунды.
+
+  Компактный вид (06.11.2026, просьба автора: «максимально компактным и
+  удобным»). Всё служебное — в одной строке шапки, иконками, которые сами
+  меняются по обстановке; место внизу — тому, что делать и что отвечать.
+
+    Шапка        — REC и время сцены · индикаторы звука (микрофон, звук игры:
+                   серый — слушает, зелёный — слышит речь, красный/жёлтый —
+                   звук не доходит) · режимы «Госслужащий» и «По ордеру»
+                   иконками (жёлтые, когда включены) · «Стоп», закрыть.
+                   Прозрачность — ползунок, виден под курсором.
+    Сбой         — одной строкой с иконкой, текст целиком — в подсказке.
+    СЕЙЧАС       — полоска этапов, «3/9», этап и пункт кодекса, права одним
+                   абзацем («вслух»), кнопка «Сделано» и отмена.
+                   После последнего этапа — плашка «Процедура пройдена» (5 с).
+    НЕ ПРОЗВУЧАЛО — строки с «!», кнопка «Было».
+    СПРАШИВАЕТ   — вопрос и ответ (по записи / ИИ); прошлые — свёрнутыми
+                   строками, щелчок раскрывает.
+    Полоса       — время задержания и сроки: чипы с иконкой по смыслу
+                   (часы, телефон, портфель адвоката, весы прокурора,
+                   звезда начальства) и цветом по остатку.
+    Подвал       — субтитры: три последние реплики, свежая внизу.
+
+  Состояния — в теле всегда одно главное: запуск → прогресс; сцена →
+  «Сейчас»; пройдено → вопросы адвоката; остановлено → короткий итог.
+
+  Окно сквозное для мыши: щелчки уходят в игру. Мышь оно забирает только под
+  кнопками, шапкой и краями. В «Фокусе игры» не забирает и там.
+-->
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --ink:#eeecf8; --ink2:#c9c5e2; --muted:#8f8bb0; --faint:#66637f; --line:rgba(255,255,255,.07);
+    --chip:rgba(255,255,255,.05); --accent:#8b7dff; --accent-ink:#cfc9ff;
+    --ok:#4ee0a0; --warn:#f2b545; --danger:#e0554e;
+    --mono:ui-monospace,'Cascadia Mono',Consolas,monospace;
+  }
+  html,body{width:100%;height:100%;overflow:hidden;background:transparent;
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);
+    -webkit-user-select:none;user-select:none}
+  #panel{position:relative;width:100%;height:100%;display:flex;flex-direction:column;
+    background:rgba(15,14,24,.96);border:1px solid rgba(124,116,255,.40);
+    border-radius:14px;overflow:hidden}
+  svg.i{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+
+  /* ── шапка: одна строка ── */
+  #bar{cursor:move;display:flex;align-items:center;gap:3px;padding:6px 6px 6px 7px;flex-shrink:0;
+    border-bottom:1px solid var(--line);min-height:36px}
+  /* REC — это и есть кнопка записи (06.11.2026): идёт — щелчок останавливает
+     (под курсором «■ СТОП»), остановлена — начинает новую («● ЗАПИСЬ»),
+     запуск — отменяет («✕ ОТМЕНА»). Новая запись стирает сцену, поэтому
+     непустую — только вторым щелчком («НОВАЯ?», 3 с). */
+  #rec{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 7px;border-radius:7px;flex:none;cursor:pointer;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    font:800 9px/1 'Inter',sans-serif;letter-spacing:.7px;color:var(--muted);transition:background .12s,border-color .12s,color .12s}
+  #recH{display:none}
+  #rec:hover #recW,#rec:hover #recT,#rec.arm #recW,#rec.arm #recT{display:none!important}
+  #rec:hover #recH,#rec.arm #recH{display:inline}
+  #rec:hover{background:rgba(224,85,78,.22);border-color:rgba(224,85,78,.6);color:#ffd4d1}
+  #rec:not(.on):not(.boot):hover{background:rgba(78,224,160,.16);border-color:rgba(78,224,160,.5);color:#b8f6da}
+  #rec:not(.on):not(.boot):hover #dot{background:var(--ok)}
+  #rec.on:hover #dot{border-radius:1.5px;background:var(--danger)}
+  #rec.arm,#rec.arm:hover{background:rgba(242,181,69,.2);border-color:rgba(242,181,69,.6);color:#f6cf86}
+  #rec.arm #dot{background:var(--warn);animation:pulse .6s ease-in-out infinite}
+  #rec.on{background:rgba(224,85,78,.14);border-color:rgba(224,85,78,.42);color:#ffb3ad}
+  #rec.boot{background:rgba(242,181,69,.12);border-color:rgba(242,181,69,.42);color:#f6cf86}
+  #dot{width:7px;height:7px;border-radius:50%;background:#5a5870;flex:none}
+  #rec.on #dot{background:var(--danger);animation:pulse 1.6s ease-in-out infinite}
+  #rec.boot #dot{background:var(--warn);animation:pulse .9s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  #recT{font:700 10px/1 var(--mono);letter-spacing:0;color:inherit}
+  #recT:empty{display:none}
+  #title{display:inline-flex;align-items:center;gap:4px;font:800 9px/1 'Inter',sans-serif;letter-spacing:1px;color:var(--accent-ink);text-transform:uppercase;white-space:nowrap;margin-left:2px}
+  #title .beta{font-size:7px;letter-spacing:.6px;color:var(--warn);border:1px solid rgba(242,181,69,.5);border-radius:4px;padding:1px 3px}
+  #srv{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font:700 8px/1 'Inter',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:999px;padding:4px 7px}
+  #srv:empty{display:none}
+  .grow{flex:1;min-width:4px}
+  /* группа иконок шапки */
+  .grp{display:inline-flex;align-items:center;gap:1px;padding:1px;border-radius:8px;background:rgba(255,255,255,.035);flex:none}
+  .grp:empty{display:none}
+  /* индикатор звука: только показывает, не кнопка */
+  .hz{position:relative;width:21px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--faint);transition:color .2s,background .2s}
+  .hz.on{color:var(--muted)}
+  .hz.talk{color:var(--ok);background:rgba(78,224,160,.12)}
+  .hz.talk::after{content:'';position:absolute;inset:0;border-radius:6px;box-shadow:0 0 0 1px rgba(78,224,160,.45);animation:pulse 1.2s ease-in-out infinite}
+  .hz.bad{color:#ff8f87;background:rgba(224,85,78,.16)}
+  .hz.warn{color:#f6cf86;background:rgba(242,181,69,.14)}
+  /* режимы: иконка; включённый — жёлтый, с подписью */
+  .mtg{height:20px;min-width:21px;padding:0 4px;border-radius:6px;border:0;background:none;color:var(--faint);
+    font:800 8.5px/1 'Inter',sans-serif;letter-spacing:.03em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+  .mtg:hover{color:#fde3ae;background:rgba(242,181,69,.10)}
+  .mtg .t{display:none}
+  .mtg.on{background:rgba(242,181,69,.18);color:#f6cf86;padding:0 6px}
+  .mtg.on .t{display:inline}
+  .mtg[disabled]{cursor:default}
+  .mtg[disabled]:not(.on){display:none}
+  /* Прозрачность нужна редко: ползунок виден, только когда курсор над шапкой */
+  input[type=range]{-webkit-appearance:none;height:3px;background:rgba(255,255,255,.16);
+    border-radius:2px;outline:none;flex:none;width:0;opacity:0;transition:opacity .15s,width .15s}
+  #bar:hover input[type=range]{width:40px;opacity:1;margin:0 2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;
+    border-radius:50%;background:var(--accent);cursor:pointer}
+  .ctl{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;height:22px;min-width:22px;border-radius:7px;cursor:pointer;
+    font:700 9.5px/1 'Inter',sans-serif;padding:0 7px;border:1px solid rgba(255,255,255,.09);
+    background:rgba(255,255,255,.05);color:#b7b2da}
+  .ctl:hover{background:rgba(255,255,255,.10);color:#fff}
+  #closeBtn{padding:0;border-color:transparent;background:none;color:var(--muted)}
+  #closeBtn:hover{background:rgba(255,255,255,.08);color:#fff}
+
+  /* ── тело ── */
+  #body{flex:1;min-height:0;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:6px}
+  #body::-webkit-scrollbar{width:5px}
+  #body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+  /* карточки не сжимаются — тело прокручивается (раньше карточки сплющивало
+     до заголовка, когда всё не влезало) */
+  #body > *{flex-shrink:0}
+  .blk{position:relative;border-radius:10px;padding:8px 9px 8px 11px;overflow:hidden;animation:rise .2s ease-out both}
+  .blk::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,.16)}
+  @keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .lbl{font:800 8px/1 'Inter',sans-serif;letter-spacing:1.1px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+  .lbl .at{margin-left:auto;font:700 9px/1 var(--mono);letter-spacing:0;color:var(--faint);text-transform:none}
+  .ref{font:800 8.5px/1 var(--mono);letter-spacing:0;text-transform:none;color:var(--accent-ink);white-space:nowrap;
+    background:rgba(139,125,255,.13);border:1px solid rgba(139,125,255,.42);border-radius:5px;padding:3px 5px}
+  .ref[data-ref],.missR[data-ref],.tm[data-ref]{cursor:pointer}
+  .ref[data-ref]:hover{color:#fff;background:rgba(139,125,255,.30)}
+  .missR[data-ref]:hover{color:#fff}
+
+  /* сбой и «не слышу» — одной строкой с иконкой; полностью — по наведению */
+  .alert{display:flex;align-items:flex-start;gap:7px;border-radius:9px;padding:6px 9px;
+    font:600 10px/1.4 'Inter',sans-serif}
+  .alert svg{margin-top:1px}
+  .alert span{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .alert.bad{background:rgba(224,85,78,.12);border:1px solid rgba(224,85,78,.42);color:#ffc9c4}
+  .alert.wrn{background:rgba(242,181,69,.09);border:1px solid rgba(242,181,69,.36);color:#fde3ae}
+  #warn{display:flex;flex-direction:column;gap:5px}
+  #warn:empty{display:none}
+  #dl{border-radius:9px;padding:7px 9px;background:rgba(139,125,255,.09);border:1px solid rgba(139,125,255,.34);
+    font:500 10px/1.45 'Inter',sans-serif;color:var(--ink2)}
+  #dl b{color:#fff;font-weight:700}
+  .dlbar{display:block;height:4px;border-radius:4px;background:rgba(255,255,255,.10);overflow:hidden;margin:5px 0}
+  .dlbar span{display:block;height:100%;background:var(--accent);border-radius:4px}
+  #boot{display:flex;align-items:center;gap:8px;border-radius:9px;padding:7px 9px;background:rgba(242,181,69,.09);border:1px solid rgba(242,181,69,.36);
+    font:600 10px/1.45 'Inter',sans-serif;color:#fde3ae}
+  #boot::before{content:'';flex:none;width:11px;height:11px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:var(--warn);animation:rot .9s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  #doneT{display:flex;align-items:center;gap:6px;border-radius:9px;padding:7px 9px;
+    background:rgba(78,224,160,.09);border:1px solid rgba(78,224,160,.32);
+    font:800 10.5px/1 'Inter',sans-serif;color:#b8f6da;animation:fadeout 5s linear forwards}
+  @keyframes fadeout{0%,80%{opacity:1}100%{opacity:0}}
+
+  /* ── сейчас ── */
+  #now{background:rgba(139,125,255,.08);border:1px solid rgba(139,125,255,.30);padding-top:7px}
+  #now::before{background:var(--accent)}
+  #steps{display:flex;gap:2px;margin:0 0 7px}
+  .pd{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.10)}
+  .pd.on{background:var(--ok)}
+  .pd.miss{background:var(--danger)}
+  .pd.cur{background:var(--accent);box-shadow:0 0 6px rgba(139,125,255,.7)}
+  #nowHead{display:flex;align-items:flex-start;gap:7px}
+  #nowN{flex:none;font:800 9px/1 var(--mono);color:var(--accent-ink);background:rgba(139,125,255,.16);border-radius:5px;padding:4px 5px;margin-top:1px}
+  #nowN:empty{display:none}
+  #nowT{flex:1;min-width:0;font:800 14px/1.25 'Inter',sans-serif;color:#fff}
+  #nowRef{flex:none;margin-top:1px}
+  #nowH{font:500 10px/1.4 'Inter',sans-serif;color:var(--muted);margin-top:3px}
+  /* права: читать вслух — светло, одним абзацем */
+  #nowL{margin-top:6px}
+  #nowL div{font:500 11.5px/1.5 'Inter',sans-serif;color:var(--ink);
+    background:rgba(0,0,0,.22);border-radius:8px;padding:6px 9px;
+    -webkit-user-select:text;user-select:text}
+  #nowL div::before{content:'вслух';display:block;font:800 7.5px/1 'Inter',sans-serif;letter-spacing:1.1px;
+    text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+  #nowK{display:flex;gap:5px;margin-top:7px;align-items:stretch}
+  .btn{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:var(--ink2);
+    border-radius:8px;padding:5px 8px;cursor:pointer;font:700 10px/1 'Inter',sans-serif;
+    display:inline-flex;align-items:center;justify-content:center;gap:5px}
+  .btn:hover{background:rgba(255,255,255,.10);color:#fff}
+  #stageBtn{flex:1;height:28px;font-size:11px;background:var(--accent);border-color:var(--accent);color:#fff}
+  #stageBtn:hover{background:#9b8fff;border-color:#9b8fff}
+  #stageBtn kbd{font:700 8.5px/1 Consolas,monospace;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 4px;margin-left:2px}
+  #backBtn{flex:none;width:30px;height:28px;padding:0}
+  #keyHint{font:600 8.5px/1.6 'Inter',sans-serif;color:var(--faint);margin-top:6px}
+  #keyHint kbd{font:700 8.5px/1 Consolas,monospace;color:var(--ink2);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:4px;padding:1px 4px}
+  #keyHint:empty{display:none}
+
+  /* ── не прозвучало ── */
+  .miss{background:rgba(224,85,78,.08);border:1px solid rgba(224,85,78,.32);padding-top:6px;padding-bottom:6px}
+  .miss::before{background:var(--danger)}
+  .missI{display:flex;align-items:center;gap:7px;padding:4px 0;border-top:1px solid var(--line)}
+  .missI:first-child{border-top:0;padding-top:0}
+  .missI:last-child{padding-bottom:0}
+  .missI > svg{color:var(--danger)}
+  .missI > div{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  .missT{font:700 10.5px/1.3 'Inter',sans-serif;color:#f6b1ac}
+  .missR{font:700 8.5px/1.3 var(--mono);color:var(--muted)}
+  .missI .btn{flex:none;padding:4px 7px;font-size:9px}
+
+  /* ── вопрос адвоката ── */
+  #ask{background:rgba(242,181,69,.07);border:1px solid rgba(242,181,69,.30)}
+  #ask::before{background:var(--warn)}
+  #ask.idle{background:rgba(255,255,255,.03);border-color:var(--line)}
+  #ask.idle::before{background:rgba(255,255,255,.16)}
+  #ask .lbl{color:#f6cf86}
+  #ask.idle .lbl{color:var(--muted)}
+  #askQ{font:600 11.5px/1.4 'Inter',sans-serif;color:#fde3ae}
+  #askA{margin-top:6px;font:500 11.5px/1.5 'Inter',sans-serif;color:var(--ink);
+    background:rgba(0,0,0,.22);border-radius:8px;padding:6px 9px;
+    -webkit-user-select:text;user-select:text}
+  #askA:empty{display:none}
+  #askA.ai{box-shadow:inset 2px 0 0 var(--ok)}
+  #askSrc{display:flex;align-items:center;gap:5px;margin-top:5px;font:600 8.5px/1.2 'Inter',sans-serif;color:var(--faint)}
+  #askSrc .tag{font:800 7.5px/1 'Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 5px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:var(--muted)}
+  #askSrc.ai .tag{background:rgba(78,224,160,.14);border-color:rgba(78,224,160,.4);color:#b8f6da}
+  #askSrc.wait span:last-child{color:var(--accent-ink)}
+  /* во время процедуры вопрос компактный: главное — «Сейчас»; ответ — в три
+     строки (наведите — целиком) */
+  #ask.compact{padding:6px 9px 6px 11px}
+  #ask.compact .lbl{margin-bottom:4px}
+  #ask.compact #askQ{font-size:10.5px}
+  #ask.compact #askA{margin-top:4px;font-size:10.5px;padding:4px 7px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  #ask.compact #askA:hover{display:block}
+  #ask.compact #askSrc{display:none}
+  #askIdle{display:flex;align-items:center;gap:7px;font:500 10px/1.45 'Inter',sans-serif;color:var(--muted)}
+  #askIdle::before{content:'';flex:none;width:6px;height:6px;border-radius:50%;background:var(--warn);opacity:.7;animation:pulse 2.2s ease-in-out infinite}
+  /* прошлые вопросы: серые строки, щелчок раскрывает */
+  #qOld{display:flex;flex-direction:column;gap:4px}
+  #qOld:empty{display:none}
+  .qc{border-radius:8px;padding:5px 8px;background:rgba(255,255,255,.03);border:1px solid var(--line);cursor:pointer;opacity:.6}
+  .qc:hover{opacity:.85}
+  .qc.open{opacity:.92}
+  .qcH{display:flex;gap:6px;align-items:baseline;font:600 9.5px/1.35 'Inter',sans-serif;color:#8a86a6;min-width:0}
+  .qcH::before{content:'▸';flex:none;color:var(--faint);font-size:8px}
+  .qc.open .qcH::before{content:'▾'}
+  .qcH b{flex:none;color:var(--faint);font:700 9px/1.35 var(--mono)}
+  .qcH i{flex:1;min-width:0;color:var(--ink2);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .qc.open .qcH i{white-space:normal}
+  .qcA{display:none;margin-top:4px;font:500 10px/1.5 'Inter',sans-serif;color:var(--ink2);
+    border-left:2px solid rgba(255,255,255,.16);padding-left:7px;-webkit-user-select:text;user-select:text}
+  .qc.open .qcA{display:block}
+
+  /* остановлено: короткий итог */
+  #stopped{background:rgba(255,255,255,.03);border:1px solid var(--line)}
+  #stopT{display:flex;align-items:center;gap:6px;font:800 12px/1.3 'Inter',sans-serif;color:var(--ink)}
+  #stopS{font:500 9.5px/1.5 'Inter',sans-serif;color:var(--muted);margin-top:3px}
+
+  /* ── полоса сроков ── */
+  #strip{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:5px 7px;border-top:1px solid var(--line);flex-shrink:0}
+  #strip.empty{display:none}
+  .chip{position:relative;display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:3px 6px 4px;overflow:hidden;
+    background:var(--chip);border:1px solid rgba(255,255,255,.09);
+    font:600 8.5px/1.2 'Inter',sans-serif;color:var(--muted);white-space:nowrap}
+  .chip svg{width:11px;height:11px;color:var(--faint)}
+  .chip b{font:800 9.5px/1.2 var(--mono);color:var(--ink)}
+  .chip.tm::after{content:'';position:absolute;left:0;bottom:0;height:2px;width:var(--p,0%);background:var(--accent);opacity:.8}
+  #det{background:rgba(224,85,78,.09);border-color:rgba(224,85,78,.32)}
+  #det svg{color:#f0938d}
+  #det b{color:#ffd4d1}
+  #timers{display:contents}
+  .tm .r,.tm .tl{display:none}
+  .tm.warn{border-color:rgba(242,181,69,.5)} .tm.warn b,.tm.warn svg{color:#f6cf86} .tm.warn::after{background:var(--warn)}
+  .tm.over{border-color:rgba(224,85,78,.55);background:rgba(224,85,78,.13)} .tm.over b,.tm.over,.tm.over svg{color:#f0938d} .tm.over::after{background:var(--danger)}
+  .tm.over svg{animation:pulse 1s ease-in-out infinite}
+  .tm.paused{opacity:.75}
+
+  /* ── субтитры ── */
+  #foot{border-top:1px solid var(--line);padding:5px 9px 7px;flex-shrink:0}
+  #foot.empty{display:none}
+  #subs{display:flex;flex-direction:column;gap:2px}
+  .fl{font:500 10px/1.4 'Inter',sans-serif;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .fl.o1{opacity:.45} .fl.o2{opacity:.7}
+  .fl:last-child{color:var(--ink)}
+  .fl .at{color:#5f5c78;font:600 8.5px/1 var(--mono);margin-right:4px}
+  .fl .tr{margin-right:4px;font-weight:800}
+  .tr{color:var(--accent)}
+  .tr.around{color:#e0a24e}
+  .tr.mix{color:#4ec9b0}
+  .tr.officer{color:#7cb4ff} .tr.lawyer{color:#f6cf86} .tr.prosecutor{color:#c9a0ff}
+  .tr.detainee{color:#f0938d} .tr.unknown{color:var(--muted)}
+  .shaky{color:#e0a24e}
+
+  /* ── размер: уголок и края ── */
+  .grip{position:absolute;z-index:5}
+  #gripR{top:36px;right:0;bottom:14px;width:6px;cursor:ew-resize}
+  #gripB{left:14px;right:14px;bottom:0;height:6px;cursor:ns-resize}
+  #gripC{right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize}
+  #gripC::after{content:'';position:absolute;right:4px;bottom:4px;width:6px;height:6px;
+    border-right:2px solid rgba(139,125,255,.45);border-bottom:2px solid rgba(139,125,255,.45);border-radius:0 0 3px 0}
+
+  /* Узко — только самое нужное; шире — подписи, сервер, номера статей у сроков */
+  /* Шапка по ширине: сначала уходят подписи, потом слова — иконки и время остаются */
+  @media (max-width:339px){ .tm .ts{display:none} #rec.on #recW{display:none} }
+  @media (max-width:299px){ #title{display:none} }
+  @media (max-width:459px){ #title .tx{display:none} .mtg.on .t{display:none} .mtg.on{padding:0 4px} }
+  @media (max-width:419px){ #srv{display:none} }
+  /* невысокое окно: две строки субтитров, место — тому, что делать */
+  @media (max-height:379px){ .fl.o2{display:none} }
+  @media (max-height:299px){ .fl.o1{display:none} #keyHint{display:none} }
+  @media (min-width:420px){
+    #nowT{font-size:16px} #nowL div,#askA,#askQ{font-size:12px} .fl{font-size:10.5px}
+    .tm .r,.tm .tl{display:inline} .tm .ts{display:none} .tm .r{color:var(--faint);font-size:8px}
+  }
+  @media (min-width:540px){ #nowT{font-size:18px} #nowL div,#askA{font-size:13px} }
+  @media (prefers-reduced-motion:reduce){#rec #dot,#askIdle::before,#boot::before,.blk,.hz.talk::after,.tm.over svg{animation:none}}
+
+  .hide{display:none!important}
+  /* «Фокус игры»: окно сквозное для мыши целиком (решает main.js). Внешне —
+     только синяя рамка; кольцо рисуется ВНУТРЬ, иначе обрежется краем окна. */
+  body.nofocus #panel{border-color:#3b82f6;box-shadow:inset 0 0 0 1px #3b82f6}
+</style>
+</head>
+<body>
+<div id="panel">
+  <div id="bar" data-grab="1">
+    <button id="rec" title="Идёт ли запись и сколько"><span id="dot"></span><span id="recW">СТОП</span><span id="recT"></span><span id="recH"></span></button>
+    <span id="title" title="Bodycam — разбор сцены"><span class="tx">Bodycam</span><span class="beta">BETA</span></span>
+    <span id="srv"></span>
+    <span class="grow"></span>
+    <span class="grp" id="hear"></span>
+    <span class="grp" id="modes">
+      <button class="mtg" data-mode="gov" title="Задержанный — государственный служащий: прокурор, начальство, свои сроки по ПК сервера"><svg class="i" viewBox="0 0 24 24"><path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7M12 2l8 5H4z"/></svg><span class="t">ГОС</span></button>
+      <button class="mtg" data-mode="warrant" title="Задержание по ордеру или решению суда: исключения по ПК сервера"><svg class="i" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg><span class="t">ОРДЕР</span></button>
+    </span>
+    <input id="opacity" type="range" min="45" max="100" value="95" title="Прозрачность">
+    <button class="ctl" id="closeBtn" title="Закрыть окно"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+
+  <div id="body">
+    <div id="fault" class="alert bad hide"></div>
+    <div id="warn"></div>
+    <div id="dl" class="hide"></div>
+    <div id="boot" class="hide">Загружаю модель — до полуминуты. Микрофон ещё не включён.</div>
+    <div id="doneT" class="hide"></div>
+    <div class="blk hide" id="stopped"><div id="stopT"></div><div id="stopS"></div></div>
+
+    <div class="blk" id="now">
+      <div id="steps"></div>
+      <div id="nowHead"><span id="nowN"></span><div id="nowT">Жду начала сцены</div><span class="ref" id="nowRef"></span></div>
+      <div id="nowH"></div>
+      <div id="nowL"></div>
+      <div id="nowK">
+        <button class="btn" id="stageBtn" title="Этап сделан — дальше"></button>
+        <button class="btn" id="backBtn" title="Отменить последнее нажатие"></button>
+      </div>
+      <div id="keyHint"></div>
+    </div>
+
+    <div class="blk miss hide" id="miss">
+      <div class="lbl">Не прозвучало</div>
+      <div id="missL"></div>
+    </div>
+    <div class="blk hide" id="ask">
+      <div class="lbl"><span id="askIc"></span><span id="askWho">Вас спросили</span><span class="at" id="askAt"></span></div>
+      <div id="askIdle" class="hide">Жду вопросов адвоката — ответ появится здесь, по записи этой сцены.</div>
+      <div id="askCur">
+        <div id="askQ"></div>
+        <div id="askA"></div>
+        <div id="askSrc"></div>
+      </div>
+    </div>
+
+    <div id="qOld"></div>
+  </div>
+
+  <div id="strip" class="empty">
+    <span class="chip hide" id="det" title="Время задержания — с первого этапа"></span>
+    <div id="timers"></div>
+  </div>
+
+  <div id="foot" class="empty">
+    <div id="subs"></div>
+  </div>
+
+  <div class="grip" id="gripR" data-grip="r"></div>
+  <div class="grip" id="gripB" data-grip="b"></div>
+  <div class="grip" id="gripC" data-grip="rb"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var api = window.sceneAPI || {};
+  var E = function (id) { return document.getElementById(id); };
+  var state = null;
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Иконки — линиями, как в приложении (24×24, обводка)
+  var P = {
+    mic: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/>',
+    micOff: '<path d="M2 2l20 20M9 9v3a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.9-.7M19 10v2a7 7 0 0 1-.6 2.8M5 10v2a7 7 0 0 0 11.6 5.3M12 19v3"/>',
+    vol: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+    volOff: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    undo: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
+    case: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    scale: '<path d="M12 3v18M7 21h10M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/><path d="m16 16 3-8 3 8c-.9.6-1.9 1-3 1s-2.1-.4-3-1zM2 16l3-8 3 8c-.9.6-1.9 1-3 1s-2.1-.4-3-1z"/>',
+    star: '<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>',
+    bang: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+    msg: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/>',
+    pause: '<path d="M10 4H6v16h4zM18 4h-4v16h4z"/>',
+    done: '<circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/>',
+    stop: '<circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/>'
+  };
+  function ic(n, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24">' + P[n] + '</svg>'; }
+  E('stageBtn').innerHTML = ic('check') + '<span>Сделано</span><kbd id="stageKey"></kbd>';
+  E('backBtn').innerHTML = ic('undo');
+  E('askIc').innerHTML = ic('msg');
+
+  function clockText(sec) {
+    var neg = sec < 0, s = Math.abs(Math.round(sec));
+    var t = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+    return neg ? '−' + t : t;
+  }
+  function trackLabel(l) { return String(l.who || (l.track === 'you' ? 'Вы' : l.track === 'mix' ? 'Запись' : 'Вокруг')); }
+  function trackClass(l) { return 'tr ' + (l.track === 'you' ? 'you' : (l.role || l.track)); }
+
+  // Срок → иконка по смыслу: видно, о чём он, не читая подпись
+  var TIMER_IC = { detention: 'clock', call: 'phone', lawyerAnswer: 'case', lawyerWait: 'case', lawyerMeet: 'case',
+    prosAnswer: 'scale', prosWait: 'scale', bossWait: 'star' };
+  var TIMER_SHORT = { detention: 'задержание', call: 'звонок', lawyerAnswer: 'ответ адв.',
+    lawyerWait: 'прибытие адв.', lawyerMeet: 'встреча адв.', prosAnswer: 'ответ прок.',
+    prosWait: 'прибытие прок.', bossWait: 'начальство' };
+
+  // Индикаторы звука: серый — слушает, зелёный — только что была речь,
+  // красный — звук по дорожке не доходит, жёлтый — звук есть, а голосов нет.
+  var TALK_MS = 3500;
+  function hearState(kind, run, drift) {
+    if (!run) return 'off';
+    if (state.hearBad && state.hearBad[kind]) return 'bad';
+    if (state.hearWarn && state.hearWarn[kind]) return 'warn';
+    var ago = state.heard ? state.heard[kind] : null;
+    if (ago != null && ago + drift * 1000 < TALK_MS) return 'talk';
+    return 'on';
+  }
+  var HEAR_T = {
+    you: { off: 'Микрофон', on: 'Микрофон: слушаю', talk: 'Микрофон: слышу вас', bad: 'Микрофон: звук не доходит' },
+    game: { off: 'Звук игры', on: 'Звук игры: слушаю', talk: 'Звук игры: слышу речь', bad: 'Звук игры: звук не доходит', warn: 'Звук игры: голосов других игроков не слышно' },
+    pc: { off: 'Звук ПК', on: 'Звук ПК: слушаю', talk: 'Звук ПК: слышу речь', bad: 'Звук ПК: звук не доходит', warn: 'Звук ПК: речи не слышно' }
+  };
+  var hearKey = '';
+  function renderHear(run, drift) {
+    var pc = state.src === 'pc';
+    var items = pc ? [['game', 'pc', 'monitor', 'monitor']] : [['you', 'you', 'mic', 'micOff'], ['game', 'game', 'vol', 'volOff']];
+    var html = items.map(function (it) {
+      var s = hearState(it[0], run, drift);
+      return '<span class="hz ' + s + '" title="' + esc(HEAR_T[it[1]][s] || '') + '">' + ic(s === 'bad' ? it[3] : it[2]) + '</span>';
+    }).join('');
+    if (html !== hearKey) { E('hear').innerHTML = html; hearKey = html; }
+  }
+
+  /**
+   * Сроки, часы записи и индикаторы досчитываются здесь от метки времени
+   * последней сводки: срок задержания истекает и в тишине.
+   */
+  function renderTimers() {
+    if (!state) return;
+    var list = state.timers || [];
+    var drift = state.wall ? (Date.now() - state.wall) / 1000 : 0;
+    E('timers').innerHTML = list.map(function (t) {
+      var left = (t.left == null ? 0 : t.left) - (t.paused ? 0 : drift);
+      var total = t.minutes * 60;
+      var cls = left < 0 ? ' over' : (left < Math.min(300, total * 0.2) ? ' warn' : '');
+      var p = Math.max(0, Math.min(100, (1 - left / total) * 100));
+      return '<div class="chip tm' + cls + (t.paused ? ' paused' : '') + '" data-ref="' + (/ст\./.test(t.ref) ? esc(t.ref) : '') + '" style="--p:' + p.toFixed(1) + '%" title="' + esc(t.title + ' — ' + t.ref + ': ' + t.quote + (t.paused ? '\n' + t.pauseWhy : '')) + '">'
+        + ic(t.paused ? 'pause' : (TIMER_IC[t.id] || 'clock'))
+        + '<b>' + (left < 0 ? 'истёк' : clockText(left)) + '</b>'
+        + '<span class="ts">' + esc(TIMER_SHORT[t.id] || t.title) + '</span>'
+        + '<span class="tl">' + esc(t.title) + '</span>'
+        + '<span class="r">' + esc(t.ref) + '</span></div>';
+    }).join('');
+    E('strip').className = (list.length || state.detainedAt) ? '' : 'empty';
+    var boot = !!state.starting, run = !!state.running && !boot;
+    E('rec').className = boot ? 'boot' : run ? 'on' : '';
+    var dlp = boot && state.download ? state.download : null;
+    E('recW').textContent = dlp ? dlp.pct + '%' : boot ? 'ЗАПУСК' : run ? 'REC' : 'СТОП';
+    E('recT').textContent = run && state.clock != null ? clockText(state.clock + drift) : '';
+    renderRecBtn(boot, run);
+    renderHear(run, drift);
+  }
+  setInterval(renderTimers, 500);
+
+  var doneAt = 0, doneTimer = null, lastMain = '';
+
+  // ── REC: кнопка записи ──
+  var armT = 0, armTimer = null;
+  function sceneHasData() {
+    var d = state || {};
+    return !!((d.feed || []).length || (d.questions || []).length || d.detainedAt
+      || (d.stages || []).some(function (s) { return s.status === 'done' || s.status === 'manual'; }));
+  }
+  function renderRecBtn(boot, run) {
+    var k = (state && state.keys) || {};
+    var armed = !boot && !run && armT && Date.now() - armT < 3000;
+    var b = E('rec');
+    b.className = (boot ? 'boot' : run ? 'on' : '') + (armed ? ' arm' : '');
+    var h = boot ? '✕ ОТМЕНА' : run ? 'СТОП' : armed ? 'НОВАЯ?' : 'ЗАПИСЬ';
+    if (E('recH').textContent !== h) E('recH').textContent = h;
+    b.title = boot ? (state.download ? (state.download.resumable ? 'Отменить скачивание — скачанное сохранится и в следующий раз докачается' : 'Отменить скачивание — недокачанное удалится, в следующий раз начнётся заново') : 'Отменить запуск — микрофон ещё не включался')
+      : run ? 'Остановить запись' + (k.stop ? ' · из игры: ' + k.stop : '')
+      : armed ? 'Ещё раз — новая запись: записанная сцена сотрётся'
+      : 'Начать новую запись' + (k.stage ? ' · из игры: ' + k.stage + ' (сразу с первым этапом)' : '');
+  }
+  function recClick() {
+    if (!state || !api.act) return;
+    var boot = !!state.starting, run = !!state.running && !boot;
+    if (boot || run) { armT = 0; api.act({ type: 'stop' }); return; }
+    if (sceneHasData() && !(armT && Date.now() - armT < 3000)) {
+      armT = Date.now();
+      clearTimeout(armTimer);
+      armTimer = setTimeout(function () { armT = 0; renderTimers(); }, 3050);
+      renderTimers();
+      return;
+    }
+    armT = 0;
+    api.act({ type: 'start' });
+  }
+  var openQ = {};
+
+  function render(d) {
+    state = d || null;
+    if (!d) return;
+    E('fault').className = 'alert bad' + (d.fault ? '' : ' hide');
+    E('fault').title = d.fault || '';
+    E('fault').innerHTML = d.fault ? ic('alert') + '<span>' + esc(d.fault) + '</span>' : '';
+    E('warn').innerHTML = (d.warns || []).map(function (t) {
+      return '<div class="alert wrn" title="' + esc(t) + '">' + ic('volOff') + '<span><b>Не слышу:</b> ' + esc(t) + '</span></div>';
+    }).join('');
+    var md = d.mode || {};
+    E('srv').textContent = d.server || '';
+    // режимы — иконками в шапке; во время записи их можно переключать, после —
+    // остаётся только включённый, как метка
+    var live = !!(d.running || d.starting);
+    [].forEach.call(document.querySelectorAll('.mtg'), function (b) {
+      b.classList.toggle('on', !!md[b.dataset.mode]);
+      b.disabled = !live;
+    });
+    E('modes').className = 'grp' + (!live && !md.gov && !md.warrant ? ' hide' : '');
+    if (live) armT = 0;
+    E('dl').className = d.download ? '' : 'hide';
+    E('dl').innerHTML = d.download
+      ? '<b>Скачивается модель ' + esc(d.download.label) + ':</b> ' + esc(d.download.got) + ' из ' + esc(d.download.total)
+        + '<span class="dlbar"><span style="width:' + d.download.pct + '%"></span></span>'
+        + 'Один раз — дальше запуск за секунды. Микрофон ещё не включён.'
+      : '';
+    // «с 19:02» — во сколько задержан: нужно для протокола, поэтому всегда на виду
+    E('det').className = 'chip' + (d.detainedAt ? '' : ' hide');
+    E('det').innerHTML = ic('lock') + '<span>с</span><b id="detT">' + esc(d.detainedAt || '') + '</b>';
+
+    // ── что делать сейчас ──
+    var n = d.next || {};
+    var isDone = n.id === 'done';
+    if (isDone && !doneAt) {
+      doneAt = Date.now();
+      clearTimeout(doneTimer);
+      doneTimer = setTimeout(function () { render(state); }, 5050);
+    }
+    if (!isDone) doneAt = 0;
+    var booting = !!d.starting, stopped = !d.running && !d.starting;
+    // сменился главный блок (новый этап, пройдено, остановлено) — к началу:
+    // иначе прокрутка от длинных прав оставалась, и верх нового блока срезало
+    var mainKey = booting ? 'boot' : stopped ? 'stop' : isDone ? 'done' : 'now:' + n.id;
+    if (mainKey !== lastMain) { E('body').scrollTop = 0; lastMain = mainKey; }
+    E('boot').className = booting && !d.download ? '' : 'hide';
+    E('doneT').className = !stopped && isDone && Date.now() - doneAt < 5000 ? '' : 'hide';
+    E('doneT').innerHTML = ic('done') + 'Процедура пройдена';
+    E('now').className = 'blk' + (isDone || booting || stopped ? ' hide' : '');
+    var stg = d.stages || [];
+    var nDone = stg.filter(function (s) { return s.status === 'done'; }).length;
+    E('stopped').className = 'blk' + (stopped ? '' : ' hide');
+    E('stopT').innerHTML = ic('stop') + 'Запись остановлена';
+    E('stopS').textContent = (d.detainedAt ? 'задержан в ' + d.detainedAt + ' · ' : '') + 'этапов ' + nDone + ' из ' + stg.length
+      + ' · всё записанное — во вкладке Bodycam';
+    E('nowRef').textContent = n.ref || '';
+    E('nowRef').setAttribute('data-ref', n.ref || '');
+    E('nowRef').title = n.ref ? 'Открыть статью в Protocol' : '';
+    E('nowRef').className = 'ref' + (n.ref ? '' : ' hide');
+    E('nowN').textContent = n.stages ? (n.stage + '/' + n.stages) : '';
+    E('nowN').title = n.stages ? 'Этап ' + n.stage + ' из ' + n.stages : '';
+    E('steps').innerHTML = (d.stages || d.steps || []).map(function (s) {
+      var cls = (s.status === 'done' || s.status === 'manual') ? ' on' : s.status === 'missed' ? ' miss' : s.id === n.id ? ' cur' : '';
+      return '<span class="pd' + cls + '" title="' + esc(s.title) + '"></span>';
+    }).join('');
+    var k = d.keys || {};
+    E('stageKey').textContent = k.stage || '';
+    E('stageKey').className = k.stage ? '' : 'hide';
+    E('backBtn').title = 'Отменить последнее нажатие' + (k.back ? ' · из игры: ' + k.back : '');
+    // полная подсказка клавиш — только пока задержание не началось
+    E('keyHint').innerHTML = k.stage && !d.detainedAt
+      ? ('<kbd>' + esc(k.stage) + '</kbd> этап сделан' + (k.back ? ' · <kbd>' + esc(k.back) + '</kbd> отмена' : '')
+        + (k.stop ? ' · <kbd>' + esc(k.stop) + '</kbd> стоп' : ''))
+      : '';
+    E('nowT').textContent = n.title || '—';
+    E('nowH').textContent = n.hint || '';
+    E('nowH').className = n.hint ? '' : 'hide';
+    var lines = (n.lines || []).map(function (x) { return String(x).trim(); }).filter(Boolean);
+    E('nowL').innerHTML = lines.length
+      ? '<div data-n="' + lines.length + '">' + esc(lines.map(function (x) { return /[.?!…]$/.test(x) ? x : x + '.'; }).join(' ')) + '</div>'
+      : '';
+
+    // ── не прозвучало ── («не прозвучало», а не «не сделали»: приложение знает
+    // только то, что слышало; сделали молча — отметьте)
+    var miss = d.missed || [];
+    E('miss').className = 'blk miss' + (miss.length ? '' : ' hide');
+    E('missL').innerHTML = miss.map(function (m) {
+      return '<div class="missI">' + ic('bang') + '<div><span class="missT">' + esc(m.title) + '</span>'
+        + '<span class="missR" data-ref="' + esc(m.ref) + '" title="Открыть статью в Protocol">' + esc(m.ref) + '</span></div>'
+        + '<button class="btn" data-key="' + esc(m.key) + '" title="Сделали молча — отметить">Было</button></div>';
+    }).join('');
+
+    // ── разговор с адвокатом ──
+    var qs = d.questions || (d.question ? [d.question] : []);
+    var q = qs[0] || null;
+    var nowOn = !isDone && !booting && !stopped;
+    E('ask').className = 'blk' + (q ? (nowOn ? ' compact' : '') : isDone && !stopped ? ' idle' : ' hide');
+    E('askIdle').className = q ? 'hide' : '';
+    E('askCur').className = q ? '' : 'hide';
+    E('askWho').textContent = q ? (q.who ? q.who + ' спрашивает' : 'Вас спросили') : 'Вопросы адвоката';
+    E('askAt').textContent = q ? (q.at || '') : '';
+    if (q) {
+      var useAi = q.aiState === 'ready' && q.ai;
+      E('askQ').textContent = '«' + q.text + '»';
+      E('askA').textContent = useAi ? q.ai : (q.answer || '');
+      E('askA').className = useAi ? 'ai' : '';
+      var src = useAi ? ['ai', 'ИИ', 'по фактам этой сцены']
+        : q.aiState === 'wait' ? ['wait', 'по записи', 'ИИ уточняет…']
+        : q.aiState === 'rejected' ? ['', 'по записи', 'ответ ИИ отброшен: сослался не на запись']
+        : ['', 'по записи сцены', ''];
+      E('askSrc').className = src[0];
+      E('askSrc').innerHTML = '<span class="tag">' + esc(src[1]) + '</span><span>' + esc(src[2]) + '</span>';
+    }
+    E('qOld').innerHTML = qs.slice(1).map(function (x) {
+      var a = x.aiState === 'ready' && x.ai ? x.ai : x.answer;
+      return '<div class="qc' + (openQ[x.id] ? ' open' : '') + '" data-q="' + esc(x.id) + '" title="Щелчок — показать ответ">'
+        + '<div class="qcH"><b>' + esc(x.at) + '</b><i>' + (x.who ? esc(x.who) + ': ' : '') + '«' + esc(x.text) + '»</i></div>'
+        + '<div class="qcA">' + esc(a) + '</div></div>';
+    }).join('');
+
+    renderTimers();
+
+    // субтитры: до трёх строк, свежая внизу; подпись — только известная роль
+    var subs = (d.feed || []).slice(-3);
+    E('subs').innerHTML = subs.map(function (x, i) {
+      var age = subs.length - 1 - i;
+      return '<div class="fl' + (age ? ' o' + age : '') + '"><span class="at">' + esc(x.at) + '</span>'
+        + (x.who ? '<span class="' + esc(trackClass(x)) + '">' + esc(trackLabel(x)) + '</span>' : '')
+        + '<span class="' + (x.sure ? '' : 'shaky') + '">' + esc(x.text) + '</span></div>';
+    }).join('') || (d.running ? '<div class="fl o2">тишина</div>' : '');
+    E('foot').className = E('subs').innerHTML ? '' : 'empty';
+  }
+
+  // ── мышь: щелчки уходят в игру, окно забирает их только под кнопками ──
+  var through = true;
+  function setThrough(v) {
+    if (v === through) return;
+    through = v;
+    if (api.mouseThrough) api.mouseThrough(v);
+  }
+  function interactive(el) {
+    while (el && el !== document.body) {
+      if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.dataset.grab || el.dataset.grip) return true;
+      if (el.id === 'askA' || el.id === 'nowL') return true;   // текст, который выделяют
+      if (el.dataset.q) return true;                            // свёрнутый прошлый вопрос
+      if (el.dataset.ref) return true;                          // ссылка на закон
+      el = el.parentElement;
+    }
+    return false;
+  }
+  var noFocus = false;
+  if (api.onNoFocus) api.onNoFocus(function (v) {
+    noFocus = v;
+    document.body.classList.toggle('nofocus', v);
+    if (v) { through = true; drag = null; size = null; }
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (drag || size || noFocus) return;
+    setThrough(!interactive(e.target));
+  });
+  document.addEventListener('mouseleave', function () { if (!drag && !size) setThrough(true); });
+
+  // ── перетаскивание ── (своими руками: у сквозного окна системная область
+  // перетаскивания не работает)
+  var drag = null;
+  E('bar').addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 || (e.target.closest && e.target.closest('button,input'))) return;
+    drag = { sx: e.screenX, sy: e.screenY, first: true };
+    E('bar').setPointerCapture(e.pointerId);
+  });
+  E('bar').addEventListener('pointermove', function (e) {
+    if (!drag || !api.move) return;
+    api.move(e.screenX - drag.sx, e.screenY - drag.sy, drag.first);
+    drag.first = false;
+  });
+  function endDrag(e) {
+    if (!drag) return;
+    drag = null;
+    try { E('bar').releasePointerCapture(e.pointerId); } catch (err) {}
+  }
+  E('bar').addEventListener('pointerup', endDrag);
+  E('bar').addEventListener('pointercancel', endDrag);
+
+  // ── размер ──
+  var size = null;
+  [].forEach.call(document.querySelectorAll('.grip'), function (g) {
+    g.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      size = { el: g, mode: g.dataset.grip, sx: e.screenX, sy: e.screenY, first: true };
+      g.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    g.addEventListener('pointermove', function (e) {
+      if (!size || size.el !== g || !api.resize) return;
+      var dw = size.mode.indexOf('r') !== -1 ? e.screenX - size.sx : 0;
+      var dh = size.mode.indexOf('b') !== -1 ? e.screenY - size.sy : 0;
+      api.resize(Math.round(dw), Math.round(dh), size.first);
+      size.first = false;
+    });
+    function endSize(e) {
+      if (!size || size.el !== g) return;
+      size = null;
+      try { g.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    g.addEventListener('pointerup', endSize);
+    g.addEventListener('pointercancel', endSize);
+  });
+
+  // ── действия ──
+  E('closeBtn').addEventListener('click', function () { if (api.close) api.close(); });
+  E('rec').addEventListener('click', recClick);
+  E('stageBtn').addEventListener('click', function () { if (api.act) api.act({ type: 'stage', dir: 1 }); });
+  E('backBtn').addEventListener('click', function () { if (api.act) api.act({ type: 'stage', dir: -1 }); });
+  E('modes').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.mtg') : null;
+    if (b && !b.disabled && api.act) api.act({ type: 'mode', mode: b.dataset.mode });
+  });
+  E('opacity').addEventListener('input', function (e) {
+    if (api.setOpacity) api.setOpacity(Number(e.target.value) / 100);
+  });
+  // щелчок по ссылке на закон («ПК ст.17 п.г») — Protocol открывает статью
+  document.addEventListener('click', function (e) {
+    var r = e.target.closest ? e.target.closest('[data-ref]') : null;
+    var ref = r && r.getAttribute('data-ref');
+    if (ref && /ст\./.test(ref) && api.act) api.act({ type: 'ref', ref: ref });
+  });
+  E('missL').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-key]') : null;
+    if (b && api.act) api.act({ type: 'step', key: b.dataset.key });
+  });
+  E('qOld').addEventListener('click', function (e) {
+    var c = e.target.closest ? e.target.closest('.qc') : null;
+    if (!c) return;
+    if (String(window.getSelection && window.getSelection()).length) return;
+    openQ[c.dataset.q] = !openQ[c.dataset.q];
+    c.classList.toggle('open', !!openQ[c.dataset.q]);
+  });
+
+  if (api.onScene) api.onScene(render);
+  if (api.ready) api.ready();
+})();
+</script>
+</body>
+</html>
